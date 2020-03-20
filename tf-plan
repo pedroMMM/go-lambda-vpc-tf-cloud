@@ -1,0 +1,8 @@
+#!/bin/bash -e
+
+cd lambda
+GOOS=linux go build -o ../terraform/lambda main.go 
+cd ..
+
+cd terraform
+terraform plan -out plan.out

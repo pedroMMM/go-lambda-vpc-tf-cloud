@@ -1,1 +1,5 @@
 **/.terraform/*
+**/plan.out
+**/.idea/*
+**/lambda.zip
+**/lambda

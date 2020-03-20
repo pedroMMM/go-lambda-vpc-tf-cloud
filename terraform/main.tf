@@ -42,6 +42,9 @@ variable "owner" {
   type = string
 }
 
+data "aws_caller_identity" "current" {}
+
 locals {
-  app = "go-lambda-vpc-tf-cloud"
+  app        = "go-lambda-vpc-tf-cloud"
+  account_id = data.aws_caller_identity.current.account_id
 }

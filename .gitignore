@@ -1,5 +1,5 @@
-**/.terraform/*
-**/plan.out
-**/.idea/*
-**/lambda.zip
-**/lambda
+lambda/.idea/*
+terraform/.terraform/*
+terraform/lambda
+terraform/lambda.zip
+terraform/plan.out

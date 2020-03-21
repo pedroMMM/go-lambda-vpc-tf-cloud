@@ -1,7 +1,9 @@
 locals {
-  lambda_handler = "lambda"
-  lambda_bin     = format("%s/%s", path.module, local.lambda_handler)
-  lambda_zip     = "${local.lambda_bin}.zip"
+  lambda_handler   = "lambda"
+  lambda_bin       = format("%s/%s", path.module, local.lambda_handler)
+  lambda_zip       = "${local.lambda_bin}.zip"
+  state_s3_key     = "state"
+  state_s3_key_arn = format("%s/%s", aws_s3_bucket.state.arn, local.state_s3_key)
 }
 
 resource "aws_lambda_function" "counter" {
@@ -16,7 +18,7 @@ resource "aws_lambda_function" "counter" {
   environment {
     variables = {
       bucket_name  = aws_s3_bucket.state.bucket
-      state_s3_key = "state"
+      state_s3_key = local.state_s3_key
     }
   }
 
@@ -34,8 +36,7 @@ data "archive_file" "counter" {
 }
 
 resource "aws_iam_role" "counter" {
-  name = local.app
-
+  name               = local.app
   assume_role_policy = data.aws_iam_policy_document.counter.json
 }
 
@@ -52,7 +53,68 @@ data "aws_iam_policy_document" "counter" {
   }
 }
 
-resource "aws_iam_role_policy_attachment" "counter" {
+resource "aws_iam_role_policy_attachment" "counter_basic_exection" {
   role       = aws_iam_role.counter.name
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+}
+
+data "aws_iam_policy_document" "counter_execution" {
+  statement {
+    sid       = "AllowListVpcs"
+    effect    = "Allow"
+    actions   = ["ec2:DescribeVpcs"]
+    resources = ["*"]
+  }
+
+  statement {
+    sid       = "AllowListRegions"
+    effect    = "Allow"
+    actions   = ["ec2:DescribeRegions"]
+    resources = ["*"]
+  }
+
+  statement {
+    sid    = "AllowS3StateUse"
+    effect = "Allow"
+
+    actions = [
+      "s3:PutObject",
+      "s3:GetObject",
+    ]
+
+    resources = [local.state_s3_key_arn]
+  }
+
+  statement {
+    sid    = "AllowS3StateCheckExistance"
+    effect = "Allow"
+
+    actions = [
+      "s3:ListBucket",
+    ]
+
+    resources = [aws_s3_bucket.state.arn]
+  }
+
+  statement {
+    sid    = "AllowKmsUse"
+    effect = "Allow"
+
+    actions = [
+      "kms:Decrypt",
+      "kms:Encrypt",
+    ]
+
+    resources = [aws_kms_key.base.arn]
+  }
+}
+
+resource "aws_iam_policy" "counter_execution" {
+  name   = local.app
+  policy = data.aws_iam_policy_document.counter_execution.json
+}
+
+resource "aws_iam_role_policy_attachment" "counter_execution" {
+  role       = aws_iam_role.counter.name
+  policy_arn = aws_iam_policy.counter_execution.arn
 }

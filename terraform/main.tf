@@ -42,6 +42,10 @@ variable "owner" {
   type = string
 }
 
+variable "cron" {
+  type = string
+}
+
 data "aws_caller_identity" "current" {}
 
 locals {

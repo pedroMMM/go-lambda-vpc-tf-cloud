@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"log"
 	"os"
 	"sync"
 
@@ -42,7 +43,10 @@ func vpcCounter(ctx context.Context) (string, error) {
 		return "", fmt.Errorf("setState failed with:\n%w", err)
 	}
 
-	return diff.ToString(), nil
+	result := diff.ToString()
+	log.Println(result)
+
+	return result, nil
 }
 
 func main() {

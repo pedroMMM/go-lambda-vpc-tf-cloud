@@ -38,6 +38,12 @@ data "archive_file" "counter" {
 resource "aws_iam_role" "counter" {
   name               = local.app
   assume_role_policy = data.aws_iam_policy_document.counter.json
+
+  tags = {
+    Name  = local.app
+    App   = local.app
+    Owner = var.owner
+  }
 }
 
 data "aws_iam_policy_document" "counter" {

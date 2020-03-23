@@ -17,10 +17,13 @@ var static assetSet
 func vpcCounter(ctx context.Context) (string, error) {
 	once.Do(func() {
 		var err error
-
-		mySession := session.Must(session.NewSession())
-
-		static, err = newAssetSet(mySession, os.Getenv("bucket_name"), os.Getenv("state_s3_key"))
+		static, err = newAssetSet(newAssetSetInput{
+			session:    session.Must(session.NewSession()),
+			bucket:     os.Getenv("bucket_name"),
+			states3Key: os.Getenv("state_s3_key"),
+			emailFrom:  os.Getenv("email_from"),
+			emailTo:    os.Getenv("email_to"),
+		})
 		if err != nil {
 			panic(fmt.Errorf("newAssetSet failed with:\n%w", err))
 		}
@@ -37,15 +40,19 @@ func vpcCounter(ctx context.Context) (string, error) {
 	}
 
 	diff := calculateDiff(last, current)
+	result := diff.ToString()
+
+	err = sendEmail(ctx, static, diff)
+	if err != nil {
+		return "", fmt.Errorf("sendEmail failed with:\n%w", err)
+	}
 
 	err = setState(ctx, static, current)
 	if err != nil {
 		return "", fmt.Errorf("setState failed with:\n%w", err)
 	}
 
-	result := diff.ToString()
-	log.Println(result)
-
+	log.Printf("vpcCounter completed with: \n%s\n", result)
 	return result, nil
 }
 

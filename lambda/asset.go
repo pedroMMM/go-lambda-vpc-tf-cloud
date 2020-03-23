@@ -5,31 +5,46 @@ import (
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/aws/aws-sdk-go/service/s3"
+	"github.com/aws/aws-sdk-go/service/ses"
 )
 
 type assetSet struct {
-	bucket   string
-	stateKey string
-	ec2      []*ec2.EC2
-	s3       *s3.S3
+	bucket    string
+	stateKey  string
+	emailFrom string
+	emailTo   string
+	ec2       []*ec2.EC2
+	s3        *s3.S3
+	ses       *ses.SES
 }
 
-func newAssetSet(mySession *session.Session, bucket, states3Key string) (assetSet, error) {
+type newAssetSetInput struct {
+	session    *session.Session
+	bucket     string
+	states3Key string
+	emailFrom  string
+	emailTo    string
+}
+
+func newAssetSet(in newAssetSetInput) (assetSet, error) {
 	asset := assetSet{
-		bucket:   bucket,
-		stateKey: states3Key,
-		ec2:      make([]*ec2.EC2, 0),
-		s3:       s3.New(mySession),
+		bucket:    in.bucket,
+		stateKey:  in.states3Key,
+		emailFrom: in.emailFrom,
+		emailTo:   in.emailTo,
+		ec2:       make([]*ec2.EC2, 0),
+		s3:        s3.New(in.session),
+		ses:       ses.New(in.session),
 	}
 
-	regions, err := getAllAvailableRegions(ec2.New(mySession))
+	regions, err := getAllAvailableRegions(ec2.New(in.session))
 	if err != nil {
 		return asset, err
 	}
 
 	for _, e := range regions {
 		e := e
-		asset.ec2 = append(asset.ec2, ec2.New(mySession, &aws.Config{Region: &e}))
+		asset.ec2 = append(asset.ec2, ec2.New(in.session, &aws.Config{Region: &e}))
 	}
 
 	return asset, nil

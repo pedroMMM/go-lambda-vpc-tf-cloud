@@ -15,15 +15,22 @@ func Test_vpcCounter(t *testing.T) {
 
 	// Local configuration
 	myRegion := "us-east-1"
-	myBucket := ""
+	myBucket := "527158362817-go-lambda-vpc-tf-cloud"
 	myStateS3Key := "state"
+	myEmailFrom := "noreply@pmedeiros.dev"
+	myEmailTo := "mmedeirospedrom@gmail.com"
 
 	// Setup
 	ctx := context.Background()
 	once.Do(func() {
-		mySession := session.Must(session.NewSession(&aws.Config{Region: &myRegion}))
 		var err error
-		static, err = newAssetSet(mySession, myBucket, myStateS3Key)
+		static, err = newAssetSet(newAssetSetInput{
+			session:    session.Must(session.NewSession(&aws.Config{Region: &myRegion})),
+			bucket:     myBucket,
+			states3Key: myStateS3Key,
+			emailFrom:  myEmailFrom,
+			emailTo:    myEmailTo,
+		})
 		if err != nil {
 			t.Errorf("newAssetSet() error = %v", err)
 		}

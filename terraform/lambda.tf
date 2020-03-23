@@ -1,7 +1,6 @@
 locals {
   lambda_handler   = "lambda"
   lambda_bin       = format("%s/%s", path.module, local.lambda_handler)
-  lambda_zip       = "${local.lambda_bin}.zip"
   state_s3_key     = "state"
   state_s3_key_arn = format("%s/%s", aws_s3_bucket.state.arn, local.state_s3_key)
 }
@@ -19,6 +18,8 @@ resource "aws_lambda_function" "counter" {
     variables = {
       bucket_name  = aws_s3_bucket.state.bucket
       state_s3_key = local.state_s3_key
+      email_from   = format("%s@%s", var.email_from, var.email_from_domain)
+      email_to     = var.email_to
     }
   }
 
@@ -32,7 +33,7 @@ resource "aws_lambda_function" "counter" {
 data "archive_file" "counter" {
   type        = "zip"
   source_file = local.lambda_bin
-  output_path = local.lambda_zip
+  output_path = format("%s.zip", local.lambda_bin)
 }
 
 resource "aws_iam_role" "counter" {
@@ -112,6 +113,21 @@ data "aws_iam_policy_document" "counter_execution" {
     ]
 
     resources = [aws_kms_key.base.arn]
+  }
+
+  statement {
+    sid    = "AllowSesUse"
+    effect = "Allow"
+
+    actions = [
+      "ses:SendEmail",
+    ]
+
+    resources = [
+      aws_ses_domain_identity.sender.arn,
+      # The 2nd ARN is only needed if the AWS Account is still in the SES SandBox
+      format("arn:aws:ses:%s:%s:identity/%s", var.region, local.account_id, var.email_to),
+    ]
   }
 }
 

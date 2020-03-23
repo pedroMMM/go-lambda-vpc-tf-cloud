@@ -46,6 +46,18 @@ variable "cron" {
   type = string
 }
 
+variable "email_from_domain" {
+  type = string
+}
+
+variable "email_from" {
+  type = string
+}
+
+variable "email_to" {
+  type = string
+}
+
 data "aws_caller_identity" "current" {}
 
 locals {

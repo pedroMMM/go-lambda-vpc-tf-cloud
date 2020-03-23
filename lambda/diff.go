@@ -6,17 +6,31 @@ import (
 )
 
 type diff struct {
-	removed []string
-	added   []string
+	removed   []string
+	added     []string
+	message   *string
+	noChanges *bool
 }
 
 func (d diff) NoChanges() bool {
-	return len(d.added) == 0 && len(d.removed) == 0
+	if d.noChanges != nil {
+		return *d.noChanges
+	}
+
+	tmp := len(d.added) == 0 && len(d.removed) == 0
+	d.noChanges = &tmp
+	return *d.noChanges
 }
 
 func (d diff) ToString() string {
+	if d.message != nil {
+		return *d.message
+	}
+
 	if d.NoChanges() {
-		return "no changes"
+		tmp := "no changes"
+		d.message = &tmp
+		return *d.message
 	}
 
 	stringify := func(in []string, action string) string {
@@ -27,7 +41,9 @@ func (d diff) ToString() string {
 		return fmt.Sprintf("%s: %s", action, strings.Join(in, ", "))
 	}
 
-	return fmt.Sprintf("%s\n%s", stringify(d.removed, "removed"), stringify(d.added, "added"))
+	tmp := fmt.Sprintf("%s\n%s", stringify(d.removed, "removed"), stringify(d.added, "added"))
+	d.message = &tmp
+	return *d.message
 }
 
 func calculateDiff(old, new []string) diff {

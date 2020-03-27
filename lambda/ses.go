@@ -13,7 +13,7 @@ func sendEmail(ctx context.Context, static assetSet, diff diff) error {
 	charset := "UTF-8"
 	message := diff.ToString()
 
-	if !diff.NoChanges() {
+	if diff.NoChanges() {
 		return nil
 	}
 

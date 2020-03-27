@@ -11,7 +11,7 @@ import (
 
 // Test_vpcCounter runs local testing for the lambda handler
 func Test_vpcCounter(t *testing.T) {
-	t.Skip("used for local testing, you will need actual AWS credentials and to manually input for configuration")
+	//t.Skip("used for local testing, you will need actual AWS credentials and to manually input for configuration")
 
 	// Local configuration
 	myRegion := "us-east-1"
